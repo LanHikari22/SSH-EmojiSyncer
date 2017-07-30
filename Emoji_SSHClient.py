@@ -32,7 +32,14 @@ class Emoji_SSHClient:
     def connect(self):
         self._client.connect(self._host, self._port, self._username, self._password)
 
+    def pull(self):
+        pass
 
+    def push(self):
+        pass
+
+    def clone(self):
+        pass
 
     def set_address(self, host, port=22):
         self._host = host
