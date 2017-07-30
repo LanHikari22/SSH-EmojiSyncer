@@ -8,6 +8,8 @@ import os
 import glob
 import hashlib
 import paramiko
+from Emoji_SSHClient import Emoji_SSHClient
+from Emoji_SSHServer import Emoji_SSHServer
 
 class FileEntry:
     _path = None
@@ -59,21 +61,28 @@ def parseState(filename):
 def getState():
     pass
 
+PASSWORD_STORED_IN_PLAIN_TEXT_WARNING = ''
+
 class Main:
     USER = "lan"
     PATH =  "/home/%s/Desktop" % (USER)
 
     if __name__ == "__main__":
+        client = Emoji_SSHClient(host='localhost',port=22,username='lan',password=PASSWORD_STORED_IN_PLAIN_TEXT_WARNING)
+        client.connect()
+        stdin, stdout, stderr = client._client.exec_command("pwd")
+        print(stdout.read().decode())
         pass
-    
+
+
     def oldmain(self):
-            os.chdir(PATH)
+            os.chdir(self.PATH)
             dir = os.listdir(".")
             dirPath = "./Characters"
             if "Characters" in dir:
                 os.chdir("./Characters")
-                printState("%s/Character-State" % (PATH))
-                printChange("%s/Character-State" % (PATH),"%s/Character-Changelog" % (PATH))
+                printState("%s/Character-State" % (self.PATH))
+                printChange("%s/Character-State" % (self.PATH),"%s/Character-Changelog" % (self.PATH))
             else:
                 print("Hey man, create a 'Characters' directory :T")
 
