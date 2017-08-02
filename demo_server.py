@@ -63,7 +63,7 @@ class Server (paramiko.ServerInterface):
 
     def check_auth_publickey(self, username, key):
         print('Auth attempt with key: ' + u(hexlify(key.get_fingerprint())))
-        if (username == 'robey') and (key == self.good_pub_key):
+        if (username == 'lan') and (key == self.good_pub_key): # TODO robey -> lan
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
     
@@ -110,7 +110,7 @@ class Server (paramiko.ServerInterface):
         return True
 
 
-DoGSSAPIKeyExchange = True
+DoGSSAPIKeyExchange = False # todo True -> False
 
 # now connect
 try:

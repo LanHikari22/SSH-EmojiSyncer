@@ -2,19 +2,19 @@
 # main module
 # Creator: Lan
 # Date Created: 7/29/17
-# Call pthis and supply commands in order to activate the program's functionality.
+# Call this and supply commands in order to activate the program's functionality.
 ##
 import os, sys, getpass
 from Emoji_SSHClient import Emoji_SSHClient
 from Emoji_SSHServer import Emoji_SSHServer
 import paramiko
-# import demo_server
+
 
 # TODO data to put inside a .ini or .confg file
 USER = 'lan' # obtain automatically, no need to be input
 PATH =  '/home/%s/Desktop' % (USER)
 FOLDER_NAME = 'Characters'
-PORT = 2222
+PORT = 2200
 KEY_FILENAME='user_rsa.key'
 
 # start_client functions
@@ -42,6 +42,7 @@ def assertValidHost(hostname):
     """
     return hostname # todo verify? or just wait for the program to crash somewhere down the line???
 
+
 def start_client(function:int, hostname):
     """
     Initiates the client to perform what it was born to perform. To a better emoji world, comrades!
@@ -49,12 +50,14 @@ def start_client(function:int, hostname):
     :param hostname: hostname to connect to and perform emoji magic with.
     :return: Nothing. Nada. Null. None. Have a nice day!
     """
-    print('handle_push(%s)' % hostname)
     # password = getpass.getpass('Please input password: ') # only invisible echo in actual terminal, not IDLE-like env..
     # TODO ^ if false, then authenticationis automatically closed. Prefer to be asked for password later on
     client = Emoji_SSHClient(host=hostname,port=PORT,username=USER,password=None, keyfilename=KEY_FILENAME)
+    client.connect()
+
     try:
-        client.connect() # [Lan]: TODO when accounting for private key, no exception is raised upon failed auth :o
+        pass # TODO debug
+        # client.connect() # [Lan]: TODO when accounting for private key, no exception is raised upon failed auth :o
     except paramiko.ssh_exception.NoValidConnectionsError:
         print("\nUnfortunately, we could not connect... You sure the server is up? Double-checked your password?")
         print("Exiting...")
@@ -72,9 +75,11 @@ def start_client(function:int, hostname):
         print("Why are you here? You shouldn't ever see this! :T")
 
 
+
 def start_server():
+    import demo_server
     print('start_server()' )
-    server = Emoji_SSHServer() # todo should have access to config file?
+    server = Emoji_SSHServer(port=PORT) # todo should have access to config file?
     server.start_server()
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import sys
 import traceback
 import threading
 
-from protocol import ServerProtocol
+# from protocol import ServerProtocol
 
 class Emoji_SSHServer:
 
@@ -15,14 +15,6 @@ class Emoji_SSHServer:
         """
         Inner class that provides the paramiko server interface for authenticating the client
         """
-        def check_auth_interactive(self, username, submethods):
-            return super().check_auth_interactive(username, submethods)
-
-        def check_auth_interactive_response(self, responses):
-            return super().check_auth_interactive_response(responses)
-
-        def check_global_request(self, kind, msg):
-            return super().check_global_request(kind, msg)
 
         # 'data' is the output of base64.b64encode(key)
         # (using the "user_rsa_key" files)
@@ -46,8 +38,6 @@ class Emoji_SSHServer:
             return paramiko.AUTH_FAILED
 
         def check_auth_publickey(self, username, key):
-            print("username: " + str(username))
-            # print("good key: ")
             print('Auth attempt with key: ' + u(hexlify(key.get_fingerprint())))
             if (username == 'lan') and (key == self.good_pub_key):
                 return paramiko.AUTH_SUCCESSFUL
@@ -64,9 +54,6 @@ class Emoji_SSHServer:
         def check_channel_pty_request(self, channel, term, width, height, pixelwidth,
                                       pixelheight, modes):
             return True
-
-        def __init__(self):
-            self.event = threading.Event()
 
     # port number to bind to
     _port = 0
@@ -94,30 +81,32 @@ class Emoji_SSHServer:
         transport.add_server_key(self._hostkey)
         transport.start_server(server=server)
         # authenticate
-        chan = self._authClient(transport=transport, client=client)
+        chan = self._authClient(transport=transport)
         # Setting up protocol for communication with channel.
-        protocol = ServerProtocol(chan)
+        # protocol = ServerProtocol(chan)
         # Authenticated! Use the channel however you like :)
 
         # event is its own thread, and it's vital to continued communication with the client... :0
         # TODO [investigation] event and its importance and role
-        server.event.wait(10)
-        if not server.event.is_set():
-            print('*** Client never asked for a shell.')
-            client.close()
-            sys.exit(1)
+        # server.event.wait(10)
+        # if not server.event.is_set():
+        #     print('*** Client never asked for a shell.')
+        #     client.close()
+        #     sys.exit(1)
 
 
         chan.send('\r\n\r\nWelcome to my dorky little BBS!\r\n\r\n')
         chan.send('We are on fire all the time!  Hooray!  Candy corn for everyone!\r\n')
         chan.send('Happy birthday to Robot Dave!\r\n\r\n')
         chan.send('Username: ')
+
+
         f = chan.makefile('rU')
         username = f.readline().strip('\r\n')
-
+        print(username)
 
         chan.send('\r\nI don\'t like you, ' + username + '.\r\n')
-        open()
+
         # bye bye client!
         chan.close()
         client.close()
@@ -152,8 +141,8 @@ class Emoji_SSHServer:
         return client, addr
 
     @staticmethod
-    def _authClient(transport:paramiko.Transport, client:socket):
-        chan = transport.accept() # 20
+    def _authClient(transport:paramiko.Transport):
+        chan = transport.accept(20) # 20
         if chan is None:
             print('*** No channel.')
             sys.exit(1)

@@ -23,26 +23,31 @@ class Emoji_SSHClient:
         self._host = host
         self._port = port
         self._username = username
-        self._password = password
+        # self._password = password
         self._keyfilename = keyfilename
         self._client = paramiko.SSHClient()
-        self._client.load_system_host_keys()
-        self._client.load_host_keys('user_rsa.key')
-
+        # self._client.load_system_host_keys()
+        self._client.load_host_keys('known_hosts')
+        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     ##
     # Connects to given address using given authentication data.
     ##
     def connect(self):
-        if self._keyfilename is not None:
-            self._client.connect(self._host, self._port, self._username, self._password, key_filename=self._keyfilename)
-        else:
-            self._client.connect(self._host, self._port, self._username, self._password)
 
+        # if self._keyfilename is not None:
+        #     self._client.connect(self._host, self._port, self._username, self._password, key_filename=self._keyfilename)
+        # else:
+        #     self._client.connect(self._host, self._port, self._username, self._password)
 
+        self._client.connect(self._host, self._port, self._username, key_filename=self._keyfilename)
+        # t = self._client.get_transport()
+        # chan = t.open_channel(kind='session',dest_addr=((self._host, self._port)))
+        # print(bytes.decode(chan.recv(4096)))
+        # chan.send("lan")
+        # print(chan)
 
     def pull(self):
-        t = self._client.get_transport()
         pass
 
     def push(self):

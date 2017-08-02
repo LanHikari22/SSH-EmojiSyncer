@@ -1,4 +1,4 @@
-import glob, hashlib
+import glob, hashlib, os
 from paramiko import Channel
 
 # protocol control character constants
