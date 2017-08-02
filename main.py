@@ -4,85 +4,83 @@
 # Date Created: 7/29/17
 # Call pthis and supply commands in order to activate the program's functionality.
 ##
-import os
-import glob
-import hashlib
-import paramiko
+import os, sys, getpass
 from Emoji_SSHClient import Emoji_SSHClient
 from Emoji_SSHServer import Emoji_SSHServer
+import paramiko
+# import demo_server
 
-class FileEntry:
-    _path = None
-    _hash = None
-    isNew = None # First time seen by client
-    isModified = None # Seen by client, but has a different hash
+# TODO data to put inside a .ini or .confg file
+USER = 'lan' # obtain automatically, no need to be input
+PATH =  '/home/%s/Desktop' % (USER)
+FOLDER_NAME = 'Characters'
+PORT = 2222
+KEY_FILENAME='user_rsa.key'
 
-    def __init__(self, path, hash=None, isNew=None, isModified=None):
-        self._path = path
-        self._hash = hash
-        self.isNew = isNew
-        self.isModified = isModified
-        pass
+# start_client functions
+CLIENT_PUSH = 0
+CLIENT_PULL = 1
 
+def execute(argv):
+    """"Executes command parsed from args passed to program. """
+    cmd = argv[1]
+    if cmd == 'help':
+        print("Available commands: 'push <hostname>', 'pull <hostname>', and 'start_server'")
+    elif cmd == 'push' and len(argv) == 3:
+        start_client(function=CLIENT_PUSH, hostname=assertValidHost(argv[2]))
+    elif cmd == 'pull' and len(argv) == 3:
+        start_client(function=CLIENT_PULL, hostname=assertValidHost(argv[2]))
+    elif cmd == 'start_server' and len(argv) == 2:
+        start_server()
+    else:
+        print("Incorrect usage. Please supply help as an argument as such for usage information: '<progName> help'")
 
-def printState(filename):
-    file = open(filename, 'w')
-    for path in glob.iglob('./**/*', recursive=True):
-        if os.path.isfile(path):
-            file.write("%s " % path)
-            temp = open(path, "br")
-            file.write("%s\n" % hashlib.sha1(temp.read()).hexdigest())
+def assertValidHost(hostname):
+    """
+    Ensures that the passed hostname is valid If not, it tells the user and exits the program.
+    :returns: hostname if valid, else it wont return. this program will cease execution :(
+    """
+    return hostname # todo verify? or just wait for the program to crash somewhere down the line???
 
-    file.close()
+def start_client(function:int, hostname):
+    """
+    Initiates the client to perform what it was born to perform. To a better emoji world, comrades!
+    :param function: specifies what functionality the client is initiated to perform. Check out the CLIENT_x consts.
+    :param hostname: hostname to connect to and perform emoji magic with.
+    :return: Nothing. Nada. Null. None. Have a nice day!
+    """
+    print('handle_push(%s)' % hostname)
+    # password = getpass.getpass('Please input password: ') # only invisible echo in actual terminal, not IDLE-like env..
+    # TODO ^ if false, then authenticationis automatically closed. Prefer to be asked for password later on
+    client = Emoji_SSHClient(host=hostname,port=PORT,username=USER,password=None, keyfilename=KEY_FILENAME)
+    try:
+        client.connect() # [Lan]: TODO when accounting for private key, no exception is raised upon failed auth :o
+    except paramiko.ssh_exception.NoValidConnectionsError:
+        print("\nUnfortunately, we could not connect... You sure the server is up? Double-checked your password?")
+        print("Exiting...")
+        sys.exit(1)
+    except paramiko.ssh_exception.AuthenticationException:
+        print('\nI could not authenticate you... Yikes, a hacker?! Please don\'t hack me!! ><""')
+        print("Exiting (Running away)...")
 
-def printChange(stateFilename, filename):
-    file = open(filename, "w")
-    stateFile = open(stateFilename, "r")
-    prevFiles = [line.strip() for line in stateFile.readlines()]
-    currFiles = [f for f in glob.iglob('./**/*', recursive=True)] # those actually include directories too, hmm
-
-    for path in currFiles:
-        if path not in prevFiles:
-            file.write("[+] %s\n" % (path))
-
-    file.close()
-    stateFile.close()
-
-##
-# Parses entries from filename to a list of FileEntry objects.
-# returns list of parsed FileEntry objects
-##
-def parseState(filename):
-    pass
-
-##
-# returns list of FileEntry objects parsed from current directory
-##
-def getState():
-    pass
-
-PASSWORD_STORED_IN_PLAIN_TEXT_WARNING = ''
-
-class Main:
-    USER = "lan"
-    PATH =  "/home/%s/Desktop" % (USER)
-
-    if __name__ == "__main__":
-        client = Emoji_SSHClient(host='localhost',port=22,username='lan',password=PASSWORD_STORED_IN_PLAIN_TEXT_WARNING)
-        client.connect()
-        stdin, stdout, stderr = client._client.exec_command("pwd")
-        print(stdout.read().decode())
-        pass
+    # perform specified function
+    if function == CLIENT_PUSH:
+        client.push()
+    elif function == CLIENT_PULL:
+        client.pull()
+    else:
+        print("Why are you here? You shouldn't ever see this! :T")
 
 
-    def oldmain(self):
-            os.chdir(self.PATH)
-            dir = os.listdir(".")
-            dirPath = "./Characters"
-            if "Characters" in dir:
-                os.chdir("./Characters")
-                printState("%s/Character-State" % (self.PATH))
-                printChange("%s/Character-State" % (self.PATH),"%s/Character-Changelog" % (self.PATH))
-            else:
-                print("Hey man, create a 'Characters' directory :T")
+def start_server():
+    print('start_server()' )
+    server = Emoji_SSHServer() # todo should have access to config file?
+    server.start_server()
 
+if __name__ == "__main__":
+    argv = sys.argv
+    if len(argv) < 2:
+        print("Incorrect usage. Please supply help as argument as such '<progName> help'")
+        sys.exit(1)
+    execute(argv)
+    sys.exit(0)
